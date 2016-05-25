@@ -68,11 +68,19 @@
   <properties>
     <skipTests>false</skipTests>
     <skipItests>true</skipItests>
+    <docker.assemblyDescriptorRef>artifact-with-dependencies</docker.assemblyDescriptorRef>
+    <docker.from>docker.io/fabric8/java-jboss-openjdk8-jdk:1.0.13</docker.from>
+    <docker.image>fabric8/${project.artifactId}:${project.version}</docker.image>
     <integrationTestPattern>**/*KT*.java</integrationTestPattern>
+    <docker.port.container.jolokia>8778</docker.port.container.jolokia>
 
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
     <maven.javadoc.plugin.version>2.10.3</maven.javadoc.plugin.version>
+    <fabric8.iconRef>icons/java</fabric8.iconRef>
+    <fabric8.label.container>java</fabric8.label.container>
+    <fabric8.label.project>spring-boot-example</fabric8.label.project>
+    <fabric8.label.version>${project.version}</fabric8.label.version>
 
     <docker.source.dir>${basedir}/src/main/docker</docker.source.dir>
 
@@ -210,6 +218,46 @@
                 <include>${integrationTestPattern}</include>
               </includes>
             </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>io.fabric8</groupId>
+        <artifactId>docker-maven-plugin</artifactId>
+        <version>0.15.2</version>
+        <configuration>
+          <images>
+            <image>
+              <name>${docker.image}</name>
+              <build>
+                <from>${docker.from}</from>
+                <assembly>
+                  <descriptorRef>${docker.assemblyDescriptorRef}</descriptorRef>
+                </assembly>
+                <env></env>
+              </build>
+            </image>
+          </images>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>io.fabric8</groupId>
+        <artifactId>fabric8-maven-plugin</artifactId>
+        <version>2.2.115</version>
+        <executions>
+          <execution>
+            <id>json</id>
+            <phase>generate-resources</phase>
+            <goals>
+              <goal>json</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>attach</id>
+            <phase>package</phase>
+            <goals>
+              <goal>attach</goal>
+            </goals>
           </execution>
         </executions>
       </plugin>
@@ -403,6 +451,34 @@
       </activation>
       <properties>
           <javadoc.opts>-Xdoclint:none</javadoc.opts>
+      </properties>
+    </profile>
+
+    <profile>
+      <id>f8-build</id>
+      <build>
+        <defaultGoal>clean install docker:build fabric8:json</defaultGoal>
+      </build>
+    </profile>
+
+    <profile>
+      <id>f8-deploy</id>
+      <build>
+        <defaultGoal>clean install docker:build docker:push fabric8:json fabric8:apply</defaultGoal>
+      </build>
+      <properties>
+        <fabric8.recreate>true</fabric8.recreate>
+        <fabric8.imagePullPolicySnapshot>Always</fabric8.imagePullPolicySnapshot>
+      </properties>
+    </profile>
+
+    <profile>
+      <id>f8-local-deploy</id>
+      <build>
+        <defaultGoal>clean install docker:build fabric8:json fabric8:apply</defaultGoal>
+      </build>
+      <properties>
+        <fabric8.recreate>true</fabric8.recreate>
       </properties>
     </profile>
   </profiles>
