@@ -1,5 +1,4 @@
 ---
-pipeline: "workflows/maven/CanaryReleaseAndStage/Jenkinsfile"
 buildName: "spring-boot-example"
 codeReview: false
 links:
